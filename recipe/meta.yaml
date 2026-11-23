@@ -22,7 +22,8 @@ build:
     # glibc's _FORTIFY_SOURCE macros of the same names under -Werror.
     # disable-test: matches the old patch's behavior, skipping the
     # sotest/fixture tree entirely (no more DSO whitelist or symlink fixup).
-    - ./configure --prefix=$PREFIX --enable-buggy-build --disable-html --disable-man --disable-test --enable-ch-image
+    # PYTHON: conda-build points it at the host prefix, which has no Python here (it is in build only)
+    - PYTHON=$BUILD_PREFIX/bin/python ./configure --prefix=$PREFIX --enable-buggy-build --disable-html --disable-man --disable-test --enable-ch-image
     - make -j${CPU_COUNT}
     - make install
 
@@ -32,13 +33,14 @@ requirements:
     - {{ stdlib("c") }}
     - make
     # configure needs this to locate libfuse3 for squashfuse support.
-    - pkg-config
-    # configure only checks for a Python (vmin_python=3.6); in build, not host, so no python_abi pin.
+    - pkgconf
+    # configure only checks for a Python (vmin_python=3.6) with requests; in build, not host, so no python_abi pin.
     - python
+    - requests >=2.6.0
 
   run:
-    # one build for every Python; 3.10 is the oldest the feedstock has tested
-    - python >=3.10
+    # unpinned: one build for every Python (conda-forge's lint wants no constraint on a non-noarch python)
+    - python
     - requests >=2.6.0
     - tar
     # ch-image autodetects git and enables the build-cache feature by default.

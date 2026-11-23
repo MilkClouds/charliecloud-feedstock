@@ -11,8 +11,12 @@ source:
   sha256: c3c8c46fc70c6ca1213855b8e735d49978ddfb7bf6132017e1717975e8dea0e8
 
 build:
-  number: 0
+  number: 1
   skip: true  # [not linux]
+  # The Python side (ch-image, its bundled Lark) is pure Python run through `#!/usr/bin/env python3`: no
+  # per-Python-ABI builds, so no bytecode for one ABI.
+  skip_compile_pyc:
+    - "*.py"
   script:
     # buggy-build: bin/str.h poisons strdup/strcmp/strncmp, colliding with
     # glibc's _FORTIFY_SOURCE macros of the same names under -Werror.
@@ -29,15 +33,12 @@ requirements:
     - make
     # configure needs this to locate libfuse3 for squashfuse support.
     - pkg-config
-
-  host:
-    # python is pinned by conda-forge's build matrix; vmin_python=3.6
-    # in configure.ac but the matrix only builds against 3.10+ anyway.
+    # configure only checks for a Python (vmin_python=3.6); in build, not host, so no python_abi pin.
     - python
-    - requests >=2.6.0
 
   run:
-    - python
+    # one build for every Python; 3.10 is the oldest the feedstock has tested
+    - python >=3.10
     - requests >=2.6.0
     - tar
     # ch-image autodetects git and enables the build-cache feature by default.
